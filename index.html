@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LA RAYA v2.24</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Oscuro (Default) */
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --text-muted: #a1a1aa; /* zinc-400 */
+            --glass-bg: rgba(10, 10, 10, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --canvas-bg: #000000;
+            --game-border: rgba(255, 255, 255, 0.15);
+            --bar-primary: #ffffff;
+            --input-bg: rgba(255,255,255,0.1);
+            --btn-bg: #ffffff;
+            --btn-text: #000000;
+            --toggle-bg: #3f3f46;
+            
+            /* Badge Random */
+            --badge-bg: #000000;
+            --badge-text: #ffffff;
+            --badge-border: #3f3f46;
+            
+            /* Stats Buttons */
+            --stats-btn-inactive-bg: transparent;
+            --stats-btn-inactive-text: #a1a1aa;
+            --stats-btn-active-bg: #e4e4e7;
+            --stats-btn-active-text: #000000;
+
+            /* Config Buttons */
+            --config-btn-bg: rgba(255,255,255,0.1);
+            --config-btn-text: #ffffff;
+
+            /* Stats Table - Bordes definidos */
+            --table-border: rgba(255, 255, 255, 0.25);
+        }
+
+        [data-theme='light'] {
+            /* Tema Claro */
+            --bg-color: #f4f4f5; 
+            --text-color: #18181b; 
+            --text-muted: #52525b; 
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(0, 0, 0, 0.15);
+            --canvas-bg: #ffffff;
+            --game-border: rgba(0, 0, 0, 0.2);
+            --bar-primary: #000000; 
+            --input-bg: rgba(0,0,0,0.05);
+            --btn-bg: #18181b;
+            --btn-text: #ffffff;
+            --toggle-bg: #e4e4e7;
+            
+            /* Badge Random Light */
+            --badge-bg: #ffffff;
+            --badge-text: #000000;
+            --badge-border: #e4e4e7;
+
+            /* Stats Buttons Light */
+            --stats-btn-inactive-bg: #e4e4e7; 
+            --stats-btn-inactive-text: #71717a; 
+            --stats-btn-active-bg: #18181b;   
+            --stats-btn-active-text: #ffffff; 
+
+            /* Config Buttons */
+            --config-btn-bg: rgba(0,0,0,0.05);
+            --config-btn-text: #000000;
+
+            /* Stats Table - Bordes definidos */
+            --table-border: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            touch-action: none;
+            -webkit-font-smoothing: antialiased;
+            height: 100vh;
+            height: 100dvh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .theme-text-muted { color: var(--text-muted); }
+        .theme-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .safe-padding-top { padding-top: var(--safe-top); }
+        .safe-padding-bottom { padding-bottom: calc(var(--safe-bottom) + 10px); }
+        .hidden-view { display: none !important; }
+        .fade-enter { opacity: 0; transform: scale(0.98); }
+        .fade-enter-active { opacity: 1; transform: scale(1); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        path.graph-line {
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: dash 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Z-Index Hierarchy */
+        .z-ui-top { z-index: 50; }
+        .z-modal { z-index: 100; }
+        .z-bars { z-index: 30; } 
+        .z-canvas { z-index: 10; }
+        .z-overlay { z-index: 20; }
+
+        /* Estilo base para las barras verticales (DOM Elements) */
+        .game-bar {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 3px; 
+            border-radius: 999px;
+            pointer-events: none;
+            will-change: left;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(128, 128, 128, 0.3);
+            z-index: 30;
+            transition: background-color 0.3s;
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-checkbox {
+            right: 4px;
+            z-index: 10;
+            border: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            top: 2px;
+            background-color: var(--bg-color); 
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            transform: translateX(100%);
+            border-color: transparent;
+        }
+        
+        .toggle-label {
+            width: 3rem;
+            height: 1.5rem;
+            background-color: var(--toggle-bg);
+            border-radius: 9999px;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        
+        .toggle-container { position: relative; width: 3rem; height: 1.5rem; }
+        .toggle-checkbox:checked + .toggle-label { background-color: var(--text-color); }
+        .toggle-checkbox:checked { right: 2px; transform: translateX(0); left: auto; }
+        .toggle-checkbox { left: 2px; right: auto; }
+    </style>
+</head>
+<body id="main-body">
+
+    <!-- SECCIÓN DE CONFIGURACIÓN -->
+    <section id="view-setup" class="absolute inset-0 z-ui-top flex flex-col safe-padding-top safe-padding-bottom px-6">
+        <div class="mt-8 mb-6">
+            <h1 class="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-current to-gray-500" style="background-image: linear-gradient(to bottom right, var(--text-color), var(--text-muted));">LA RAYA</h1>
+            
+            <!-- CAMBIO 1: Versión v2.24 -->
+            <div class="flex items-center gap-3 mt-1">
+                <span class="theme-text-muted text-xs tracking-[0.2em] uppercase font-bold">v2.24</span>
+                <div class="h-px bg-current opacity-20 flex-1 rounded-full"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto no-scrollbar mb-4">
+            <div id="team-input-list" class="space-y-3"></div>
+            <button onclick="addTeamInput()" id="btn-add-team" class="w-full mt-3 py-3 rounded-xl border border-dashed border-current opacity-30 text-xs font-bold uppercase tracking-widest hover:opacity-100 transition-all active:scale-95 text-[var(--text-color)]">
+                + Añadir Equipo
+            </button>
+        </div>
+
+        <!-- Toggle Tema Claro / Oscuro -->
+        <!-- DESACTIVADO HASTA ARREGLARLO <div class="theme-glass rounded-2xl p-4 mb-3 flex justify-between items-center">
+            <div>
+                <span class="block text-sm font-medium">Modo Oscuro / Claro</span>
+                <span class="text-[10px] theme-text-muted uppercase tracking-wide">Apariencia</span>
+            </div>
+            <div class="toggle-container">
+                <input type="checkbox" name="toggle" id="theme-toggle" class="absolute opacity-0 w-full h-full cursor-pointer z-20" onclick="toggleThemeConfig()"/>
+                <div class="toggle-label w-full h-full"></div>
+                <div class="toggle-checkbox absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 pointer-events-none flex items-center justify-center text-[8px]" id="toggle-dot" style="transform: translateX(0);"></div>
+            </div>
+        </div>-->
+
+        <div class="theme-glass rounded-2xl p-4 mb-6 flex justify-between items-center">
+            <div>
+                <span class="block text-sm font-medium">Turnos Consecutivos</span>
+                <span class="text-[10px] theme-text-muted uppercase tracking-wide">Por equipo antes de cambiar</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="adjustRounds(-1)" class="w-10 h-10 rounded-full flex items-center justify-center font-bold active:scale-90 transition" style="background-color: var(--config-btn-bg); color: var(--config-btn-text);">-</button>
+                <span id="rounds-display" class="text-xl font-bold w-4 text-center">2</span>
+                <button onclick="adjustRounds(1)" class="w-10 h-10 rounded-full flex items-center justify-center font-bold active:scale-90 transition" style="background-color: var(--config-btn-bg); color: var(--config-btn-text);">+</button>
+            </div>
+        </div>
+
+        <!-- Botones Duales -->
+        <div id="setup-action-container">
+            <button id="btn-start-game" onclick="startGame()" class="w-full py-4 rounded-2xl text-lg font-bold shadow-lg active:scale-95 transition-transform" style="background-color: var(--btn-bg); color: var(--btn-text);">
+                COMENZAR JUEGO
+            </button>
+
+            <div id="btn-group-paused" class="hidden flex gap-3">
+                <button onclick="resetGameParams()" class="flex-1 py-4 rounded-2xl text-sm font-bold uppercase tracking-widest border border-current opacity-50 hover:opacity-100 active:scale-95 transition-all" style="color: var(--text-muted); border-color: var(--glass-border);">
+                    REINICIAR
+                </button>
+                <button onclick="continueGame()" class="flex-[1.5] py-4 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all" style="background-color: var(--btn-bg); color: var(--btn-text);">
+                    CONTINUAR
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN DE JUEGO -->
+    <section id="view-game" class="absolute inset-0 z-40 hidden-view flex flex-col overflow-hidden transition-colors duration-500">
+        
+        <!-- Header Juego -->
+        <div class="safe-padding-top w-full px-6 pt-4 pb-2 flex justify-between items-start z-ui-top shrink-0 relative">
+            <button onclick="toggleLeaderboardModal()" class="theme-glass p-2 rounded-2xl w-10 h-10 flex items-center justify-center active:scale-90 transition-transform">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg>
+            </button>
+            <div class="text-center flex-1 mx-2">
+                <h2 id="current-team-name" class="text-sm font-bold tracking-wider uppercase truncate">EQUIPO A</h2>
+                <div class="text-[10px] theme-text-muted font-bold uppercase tracking-[0.1em] mt-1">Turno <span id="current-turn-indicator">1</span></div>
+            </div>
+            <button onclick="goToSetup()" class="theme-glass p-2 rounded-2xl w-10 h-10 flex items-center justify-center active:scale-90 transition-transform">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </div>
+
+        <!-- Layout Flexible Principal -->
+        <div class="flex-1 flex flex-col w-full relative">
+            
+            <!-- 1. Espaciador Superior / Indicador Flotante -->
+            <div class="h-16 flex items-center justify-center shrink-0 z-overlay relative mt-4">
+                <div id="float-indicator" class="opacity-0 transition-all duration-200 transform translate-y-[-10px] theme-glass px-6 py-2 rounded-2xl pointer-events-none">
+                    <div class="flex items-center gap-4 text-3xl font-mono font-bold tracking-tighter">
+                        <span id="val-p1" style="color: var(--bar-primary)">--</span>
+                        <span id="val-sep" class="theme-text-muted hidden">|</span>
+                        <span id="val-p2" class="hidden">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Área de Juego Central -->
+            <!-- Ancho 95% sin padding lateral en contenedor -->
+            <div class="h-[40vh] w-[95%] mx-auto shrink-0 relative z-canvas mt-10 mb-auto" id="game-area-wrapper">
+                
+                <!-- Notas más pegadas (bottom-full) -->
+                <div id="floating-notes-container" class="absolute w-full px-1 flex justify-between z-overlay transition-all duration-300 opacity-0 -translate-y-2 pointer-events-none bottom-full mb-1 left-0">
+                    <div class="w-[45%] flex flex-col items-start pointer-events-auto group">
+                        <input type="text" id="input-note-l" placeholder="Nota Izq..." oninput="syncUnderlines()" class="w-full bg-transparent p-1 text-xs theme-text-muted placeholder-opacity-50 focus:text-[var(--text-color)] outline-none transition-colors text-left font-medium font-mono">
+                        <div id="underline-l" class="h-[1px] bg-current opacity-30 w-full transition-all duration-300 group-focus-within:opacity-100"></div>
+                    </div>
+                    <div class="w-[45%] flex flex-col items-end pointer-events-auto group">
+                        <input type="text" id="input-note-r" placeholder="Nota Der..." oninput="syncUnderlines()" class="w-full bg-transparent p-1 text-xs theme-text-muted placeholder-opacity-50 focus:text-[var(--text-color)] outline-none transition-colors text-right font-medium font-mono">
+                        <div id="underline-r" class="h-[1px] bg-current opacity-30 w-full transition-all duration-300 group-focus-within:opacity-100"></div>
+                    </div>
+                </div>
+
+                <!-- overflow-hidden AQUÍ para cortar la barra -->
+                <div class="w-full h-full rounded-2xl overflow-hidden relative" id="game-area-container" style="border: 1px solid var(--game-border);">
+                    <canvas id="game-canvas" class="w-full h-full touch-none cursor-crosshair active:cursor-grabbing" style="background-color: var(--canvas-bg);"></canvas>
+                    
+                    <!-- Barra de Predicción -->
+                    <div id="cursor-line" class="game-bar hidden transition-none" style="background-color: var(--bar-primary);"></div>
+                </div>
+
+                <div class="absolute bottom-0 left-0 text-[10px] font-mono theme-text-muted p-2 pointer-events-none pl-4">0.0</div>
+                <div class="absolute bottom-0 right-0 text-[10px] font-mono theme-text-muted p-2 pointer-events-none pr-4">10.0</div>
+            </div>
+
+            <!-- 3. Área Flexible para Puntuación -->
+            <div class="flex-grow flex flex-col justify-center items-center relative w-full z-ui-top pb-8">
+                <div id="score-feedback" class="relative text-center hidden bg-[var(--glass-bg)] backdrop-blur-md px-6 py-3 rounded-2xl border border-[var(--glass-border)] shadow-xl">
+                    <div class="flex items-end justify-center gap-4">
+                        <div class="text-right">
+                            <div class="text-[10px] theme-text-muted uppercase tracking-widest mb-1">Puntos</div>
+                            <div class="text-5xl font-black tracking-tighter leading-none" id="round-score-val" style="color: var(--text-color);">98</div>
+                        </div>
+                        <div class="h-10 w-px bg-current opacity-20 mx-2"></div>
+                        <div class="text-left">
+                            <div class="text-[10px] theme-text-muted uppercase tracking-widest mb-1">Error</div>
+                            <div class="text-2xl font-bold tracking-tighter leading-none font-mono" id="round-diff-val">0.2</div>
+                        </div>
+                    </div>
+
+                    <div id="random-badge" class="hidden absolute top-1/2 -translate-y-1/2 left-full ml-3 text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap shadow-lg" style="background-color: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--badge-border);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones Inferiores -->
+        <div class="w-full px-6 z-ui-top safe-padding-bottom shrink-0 pb-4">
+            <div class="flex gap-3">
+                <button onclick="toggleNotesInput()" id="btn-sec-left" class="flex-1 theme-glass py-4 rounded-xl text-xs font-bold theme-text-muted active:scale-95 transition-all uppercase tracking-wider">Notas</button>
+                <button id="btn-main-action" class="flex-[2] py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-black/5 active:scale-95 transition-all" style="background-color: var(--btn-bg); color: var(--btn-text);">FIJAR</button>
+                <button onclick="setRandomTarget()" id="btn-sec-right" class="flex-1 theme-glass py-4 rounded-xl text-xs font-bold theme-text-muted active:scale-95 transition-all uppercase tracking-wider">Random</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL RANKING -->
+    <section id="view-leaderboard" class="absolute inset-0 z-modal hidden-view theme-glass flex flex-col safe-padding-top safe-padding-bottom">
+        <div class="px-6 py-4 flex justify-between items-center border-b border-[var(--table-border)]">
+            <h2 class="text-xl font-bold tracking-tight">Estadísticas</h2>
+            <button onclick="toggleLeaderboardModal()" class="p-2 rounded-full opacity-50 active:scale-90 transition-transform"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="p-4 flex-1 overflow-hidden flex flex-col">
+            <div class="flex bg-current bg-opacity-5 p-1 rounded-xl mb-4 shrink-0">
+                <button onclick="sortLeaderboard('accumulated')" id="sort-accumulated" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow">Acumulado</button>
+                <button onclick="sortLeaderboard('round')" id="sort-round" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Por Ronda</button>
+            </div>
+            <div class="theme-glass rounded-2xl p-4 mb-4 relative overflow-hidden h-56 shrink-0 flex flex-col">
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span id="chart-y-label" class="text-[10px] theme-text-muted uppercase font-bold">Total Acumulado</span>
+                    <span class="text-[10px] theme-text-muted uppercase font-bold">Progreso →</span>
+                </div>
+                <div class="flex-1 relative"><svg id="stats-chart" class="w-full h-full" preserveAspectRatio="none"></svg></div>
+                <div id="chart-legend" class="flex flex-wrap gap-2 mt-3 justify-center"></div>
+            </div>
+            <div class="overflow-y-auto flex-1 no-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[10px] theme-text-muted uppercase tracking-wider border-b border-[var(--table-border)]">
+                            <th class="pb-2 font-medium w-8 pl-1">#</th>
+                            <th class="pb-2 font-medium">Equipo</th>
+                            <th class="pb-2 font-medium text-right">Avg Err</th>
+                            <th class="pb-2 font-medium text-right pr-1">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="text-sm font-medium"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    
+    <!-- MODAL MENU/AJUSTES -->
+    <div id="modal-settings" class="absolute inset-0 z-modal bg-black/50 backdrop-blur-sm flex items-center justify-center hidden-view fade-enter">
+        <div class="theme-glass w-[85%] max-w-sm p-6 rounded-2xl text-center shadow-2xl relative" style="background-color: var(--bg-color);">
+            <button onclick="toggleSettingsMenu()" class="absolute top-4 right-4 opacity-50 p-2"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <h3 class="text-xl font-bold mb-2 tracking-tight">Menú de Pausa</h3>
+            <p class="text-sm theme-text-muted mb-6 leading-relaxed">¿Deseas continuar la partida o volver a la configuración inicial?</p>
+            <div class="space-y-3">
+                <button onclick="toggleSettingsMenu()" class="w-full py-4 rounded-xl font-bold text-sm tracking-wide active:scale-95 transition-transform" style="background-color: var(--btn-bg); color: var(--btn-text);">CONTINUAR JUEGO</button>
+                <button onclick="fullReset()" class="w-full py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl font-bold text-sm tracking-wide active:scale-95 transition-transform">SALIR AL MENÚ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas Helper for Text Width -->
+    <canvas id="text-width-helper" class="hidden"></canvas>
+
+    <script>
+        const GameState = { SETUP: 'SETUP', P1_PLACE: 'P1_PLACE', P2_GUESS: 'P2_GUESS', REVEAL: 'REVEAL', GAME_OVER: 'GAME_OVER' };
+        const App = {
+            state: GameState.SETUP,
+            config: { turnsPerTeam: 2, theme: 'dark' }, 
+            teams: [],
+            session: { 
+                currentTeamIndex: 0, 
+                consecutiveTurns: 0, 
+                targetVal: null, 
+                guessVal: null, 
+                dragVal: null, 
+                isDragging: false, 
+                randomClickCount: 0,
+                isGameActive: false 
+            },
+            colors: ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899']
+        };
+
+        const BAR_PADDING = 4;
+
+        const views = { setup: document.getElementById('view-setup'), game: document.getElementById('view-game'), leaderboard: document.getElementById('view-leaderboard') };
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorLine = document.getElementById('cursor-line');
+        const gameContainer = document.getElementById('game-area-container');
+        const textHelperCtx = document.getElementById('text-width-helper').getContext('2d');
+        
+        function init() { addTeamInput(); addTeamInput(); setupCanvas(); renderLoop(); }
+
+        /* --- CONFIG THEME --- */
+        function toggleThemeConfig() {
+            const checkbox = document.getElementById('theme-toggle');
+            const body = document.getElementById('main-body');
+            const dot = document.getElementById('toggle-dot');
+            
+            if (checkbox.checked) {
+                App.config.theme = 'light';
+                body.setAttribute('data-theme', 'light');
+                dot.style.transform = 'translateX(1.5rem)';
+            } else {
+                App.config.theme = 'dark';
+                body.removeAttribute('data-theme');
+                dot.style.transform = 'translateX(0)';
+            }
+        }
+
+        function getPrimaryColor() {
+            return getComputedStyle(document.documentElement).getPropertyValue('--bar-primary').trim();
+        }
+
+        /* --- NOTAS LOGIC --- */
+        function toggleNotesInput() {
+            const container = document.getElementById('floating-notes-container');
+            if (container.classList.contains('opacity-0')) {
+                container.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+                document.getElementById('input-note-l').focus();
+            } else {
+                container.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+            }
+        }
+
+        function syncUnderlines() {
+            const inputL = document.getElementById('input-note-l');
+            const inputR = document.getElementById('input-note-r');
+            const underL = document.getElementById('underline-l');
+            const underR = document.getElementById('underline-r');
+
+            textHelperCtx.font = "500 12px Inter, sans-serif"; 
+            const widthL = Math.max(20, textHelperCtx.measureText(inputL.value || inputL.placeholder).width);
+            const widthR = Math.max(20, textHelperCtx.measureText(inputR.value || inputR.placeholder).width);
+            
+            const screenW = window.innerWidth;
+            const maxAllowed = (screenW / 2) - 30; 
+            const finalW = Math.min(Math.max(widthL, widthR) + 20, maxAllowed);
+
+            underL.style.width = `${finalW}px`;
+            underR.style.width = `${finalW}px`;
+        }
+
+        /* --- SETUP --- */
+        function addTeamInput() {
+            const container = document.getElementById('team-input-list');
+            if (container.children.length >= 5) return;
+            const id = Date.now(); 
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center fade-enter fade-enter-active team-input-row";
+            div.id = `team-row-${id}`;
+            div.innerHTML = `<div class="flex-1 relative"><input type="text" placeholder="Nombre Equipo" class="team-name-input w-full rounded-xl px-4 py-3 text-lg font-medium outline-none" style="background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--game-border);" maxlength="12"><div class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold team-number text-zinc-400">#${container.children.length + 1}</div></div><button onclick="removeTeamInput('${id}')" class="w-12 h-full py-3 rounded-xl border opacity-50 hover:opacity-100 hover:text-red-500 hover:border-red-500 transition-colors flex items-center justify-center active:scale-95" style="border-color: var(--game-border); color: var(--text-muted); background-color: var(--input-bg);"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`;
+            container.appendChild(div);
+            updateTeamNumbers();
+            if (container.children.length >= 5) document.getElementById('btn-add-team').classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        function removeTeamInput(id) {
+            const container = document.getElementById('team-input-list');
+            if (container.children.length <= 1) { alert("Debe haber al menos 1 equipo"); return; }
+            const el = document.getElementById(`team-row-${id}`);
+            if (el) el.remove();
+            updateTeamNumbers();
+            document.getElementById('btn-add-team').classList.remove('opacity-50', 'pointer-events-none');
+        }
+
+        function updateTeamNumbers() {
+            document.querySelectorAll('.team-input-row').forEach((row, idx) => {
+                row.querySelector('.team-number').textContent = `#${idx + 1}`;
+                row.querySelector('.team-name-input').placeholder = `Equipo ${idx + 1}`;
+            });
+        }
+
+        function adjustRounds(delta) {
+            let val = App.config.turnsPerTeam + delta;
+            if(val < 1) val = 1; if(val > 10) val = 10;
+            App.config.turnsPerTeam = val;
+            document.getElementById('rounds-display').textContent = val;
+        }
+
+        function startGame() {
+            const inputs = document.querySelectorAll('.team-name-input');
+            const validTeams = [];
+            inputs.forEach((input, i) => {
+                const name = input.value.trim() || `Equipo ${i+1}`;
+                validTeams.push({ id: i, name: name, color: App.colors[i], scores: [], diffs: [], totalScore: 0, totalDiff: 0 });
+            });
+            if (validTeams.length === 0) return;
+            App.teams = validTeams;
+            App.session.currentTeamIndex = 0; App.session.consecutiveTurns = 1; 
+            App.session.isGameActive = true;
+            
+            switchView('game'); startRound();
+        }
+
+        function goToSetup() { switchView('setup'); updateSetupButtons(); }
+
+        function updateSetupButtons() {
+            const btnStart = document.getElementById('btn-start-game');
+            const btnGroupPaused = document.getElementById('btn-group-paused');
+            if (App.session.isGameActive) { btnStart.classList.add('hidden'); btnGroupPaused.classList.remove('hidden'); } 
+            else { btnStart.classList.remove('hidden'); btnGroupPaused.classList.add('hidden'); }
+        }
+
+        function continueGame() { if (App.session.isGameActive) switchView('game'); }
+        function resetGameParams() { App.session.isGameActive = false; updateSetupButtons(); }
+
+        function startRound() {
+            resetBoard();
+            App.session.randomClickCount = 0;
+            const team = App.teams[App.session.currentTeamIndex];
+            
+            document.getElementById('current-team-name').textContent = team.name;
+            document.getElementById('current-team-name').style.color = team.color;
+            document.getElementById('current-turn-indicator').textContent = `${App.session.consecutiveTurns}/${App.config.turnsPerTeam}`;
+            
+            document.getElementById('score-feedback').classList.add('hidden');
+            document.getElementById('random-badge').classList.add('hidden'); 
+            document.getElementById('floating-notes-container').classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+            
+            const btnMain = document.getElementById('btn-main-action');
+            btnMain.textContent = "FIJAR"; btnMain.onclick = actionFixTarget;
+            enableMainButton(false);
+            
+            cursorLine.style.backgroundColor = getPrimaryColor();
+            cursorLine.style.opacity = '1';
+            
+            document.getElementById('btn-sec-left').classList.remove('hidden-view');
+            document.getElementById('btn-sec-right').classList.remove('hidden-view');
+            App.state = GameState.P1_PLACE;
+            
+            syncUnderlines();
+        }
+
+        function resetBoard() {
+            App.session.targetVal = null; App.session.guessVal = null; App.session.dragVal = null; 
+            const existingTarget = document.getElementById('target-bar');
+            if(existingTarget) existingTarget.remove();
+            
+            cursorLine.style.backgroundColor = getPrimaryColor();
+            cursorLine.classList.add('hidden');
+            
+            document.getElementById('float-indicator').classList.add('opacity-0', 'translate-y-[-10px]');
+            document.getElementById('val-p1').style.color = getPrimaryColor();
+            document.getElementById('val-p2').classList.add('hidden');
+            document.getElementById('val-sep').classList.add('hidden');
+        }
+
+        function setRandomTarget() {
+            if (App.state !== GameState.P1_PLACE && App.state !== GameState.P2_GUESS) return;
+            const val = Math.random() * 10;
+            App.session.dragVal = val;
+            App.session.randomClickCount++;
+            moveCursorToVal(val);
+            
+            if (App.state === GameState.P1_PLACE) {
+                App.session.targetVal = val;
+                cursorLine.style.backgroundColor = getPrimaryColor();
+                enableMainButton(true);
+            } else if (App.state === GameState.P2_GUESS) {
+                App.session.guessVal = val;
+                cursorLine.classList.remove('hidden');
+                cursorLine.style.backgroundColor = App.teams[App.session.currentTeamIndex].color;
+                enableMainButton(true);
+            }
+            updateFloatIndicator(); triggerHaptic();
+        }
+
+        function actionFixTarget() {
+            if (App.state === GameState.P1_PLACE) {
+                if (App.session.targetVal === null) return;
+                triggerHaptic();
+                cursorLine.classList.add('hidden');
+                App.session.dragVal = null;
+                
+                const inputL = document.getElementById('input-note-l');
+                const inputR = document.getElementById('input-note-r');
+                const container = document.getElementById('floating-notes-container');
+                if (!inputL.value.trim() && !inputR.value.trim()) {
+                    container.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+                } else {
+                    container.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+                }
+                
+                App.state = GameState.P2_GUESS;
+                
+                const btnMain = document.getElementById('btn-main-action');
+                btnMain.textContent = "REVELAR"; btnMain.onclick = actionReveal;
+                enableMainButton(false); 
+                
+                document.getElementById('btn-sec-left').classList.add('hidden-view');
+                document.getElementById('btn-sec-right').classList.add('hidden-view');
+                document.getElementById('float-indicator').classList.add('opacity-0');
+            }
+        }
+
+        function actionReveal() {
+            if (App.session.guessVal === null) return;
+            triggerHaptic();
+            App.state = GameState.REVEAL;
+            
+            const team = App.teams[App.session.currentTeamIndex];
+
+            cursorLine.style.backgroundColor = team.color;
+            cursorLine.classList.remove('hidden');
+            const pxGuess = getPxFromVal(App.session.guessVal);
+            cursorLine.style.left = `${pxGuess}px`; 
+
+            const targetBar = document.createElement('div');
+            targetBar.id = 'target-bar';
+            targetBar.className = 'game-bar'; 
+            targetBar.style.backgroundColor = getPrimaryColor(); 
+            
+            const pxTarget = getPxFromVal(App.session.targetVal);
+            targetBar.style.left = `${pxTarget}px`; 
+            
+            gameContainer.appendChild(targetBar);
+
+            document.getElementById('val-p1').style.color = getPrimaryColor(); // Target
+            document.getElementById('val-p2').style.color = team.color; // Guess
+
+            const btnMain = document.getElementById('btn-main-action');
+            btnMain.textContent = "SIGUIENTE"; btnMain.onclick = actionNextTurn;
+            enableMainButton(true);
+
+            const tRounded = parseFloat(App.session.targetVal.toFixed(1));
+            const gRounded = parseFloat(App.session.guessVal.toFixed(1));
+            const diff = Math.abs(tRounded - gRounded);
+            
+            let score = 0;
+            if (diff <= 5.0) {
+                score = Math.max(0, Math.round(100 * (1 - (diff / 5))));
+            }
+            
+            team.scores.push(score); team.diffs.push(diff);
+            team.totalScore += score; team.totalDiff += diff;
+
+            const scorePanel = document.getElementById('score-feedback');
+            scorePanel.classList.remove('hidden');
+            document.getElementById('round-score-val').textContent = score;
+            
+            const diffEl = document.getElementById('round-diff-val');
+            diffEl.textContent = diff.toFixed(1);
+            diffEl.className = "text-2xl font-bold tracking-tighter leading-none font-mono"; 
+            if (diff === 0.0) {
+                diffEl.classList.add('text-green-500');
+            } else if (diff <= 0.5) {
+                diffEl.style.color = 'var(--text-color)';
+            } else {
+                diffEl.classList.add('text-red-500');
+            }
+
+            if (App.session.randomClickCount >= 2) {
+                const badge = document.getElementById('random-badge');
+                badge.textContent = `🎲 x${App.session.randomClickCount}`;
+                badge.classList.remove('hidden');
+            }
+
+            updateFloatIndicator();
+        }
+
+        function actionNextTurn() {
+            document.getElementById('input-note-l').value = "";
+            document.getElementById('input-note-r').value = "";
+            syncUnderlines();
+            
+            if (App.session.consecutiveTurns < App.config.turnsPerTeam) { App.session.consecutiveTurns++; startRound(); } 
+            else { App.session.currentTeamIndex = (App.session.currentTeamIndex + 1) % App.teams.length; App.session.consecutiveTurns = 1; startRound(); }
+        }
+
+        function toggleSettingsMenu() { views.settings.classList.toggle('hidden-view'); }
+        function enableMainButton(enabled) {
+            const btn = document.getElementById('btn-main-action');
+            if (enabled) { btn.style.opacity = '1'; } else { btn.style.opacity = '0.5'; }
+        }
+        function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
+        function setupCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const container = canvas.parentElement;
+            container.addEventListener('pointerdown', handleStart);
+            container.addEventListener('pointermove', handleMove);
+            window.addEventListener('pointerup', handleEnd);
+            container.addEventListener('touchstart', (e)=>e.preventDefault(), {passive: false});
+            container.addEventListener('touchmove', (e)=>e.preventDefault(), {passive: false});
+        }
+
+        function getValFromEvent(e) {
+            const rect = gameContainer.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            
+            const x = Math.max(BAR_PADDING, Math.min(rect.width - BAR_PADDING, clientX - rect.left));
+            const effectiveWidth = rect.width - (BAR_PADDING * 2);
+            const val = ((x - BAR_PADDING) / effectiveWidth) * 10;
+            return Math.max(0, Math.min(10, val));
+        }
+
+        function getPxFromVal(val) {
+            const rect = gameContainer.getBoundingClientRect();
+            const effectiveWidth = rect.width - (BAR_PADDING * 2);
+            return (val / 10) * effectiveWidth + BAR_PADDING;
+        }
+
+        function moveCursorToVal(val) {
+            cursorLine.classList.remove('hidden');
+            const px = getPxFromVal(val);
+            cursorLine.style.left = `${px}px`; 
+        }
+
+        function handleStart(e) {
+            if (App.state !== GameState.P1_PLACE && App.state !== GameState.P2_GUESS) return;
+            App.session.isDragging = true; handleMove(e);
+        }
+
+        function handleMove(e) {
+            if (App.session.isDragging) {
+                const val = getValFromEvent(e);
+                const team = App.teams[App.session.currentTeamIndex];
+                App.session.dragVal = val;
+                moveCursorToVal(val);
+                
+                if (App.state === GameState.P1_PLACE) { 
+                    cursorLine.style.backgroundColor = getPrimaryColor();
+                    App.session.targetVal = val; 
+                    enableMainButton(true); 
+                } 
+                else if (App.state === GameState.P2_GUESS) { 
+                    cursorLine.classList.remove('hidden');
+                    cursorLine.style.backgroundColor = team.color;
+                    App.session.guessVal = val; 
+                    enableMainButton(true); 
+                }
+                updateFloatIndicator();
+            }
+        }
+
+        function handleEnd() { App.session.isDragging = false; }
+
+        function renderLoop() { drawStatic(); requestAnimationFrame(renderLoop); }
+
+        function drawStatic() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width; const h = rect.height;
+            ctx.clearRect(0, 0, w, h);
+            
+            const isLight = App.config.theme === 'light';
+            ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+            
+            ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        function updateFloatIndicator() {
+            const indicator = document.getElementById('float-indicator');
+            const p1 = document.getElementById('val-p1');
+            const p2 = document.getElementById('val-p2');
+            const sep = document.getElementById('val-sep');
+            const teamColor = App.teams[App.session.currentTeamIndex]?.color || '#ffffff';
+            let v1 = null, v2 = null;
+
+            if (App.state === GameState.P1_PLACE) {
+                p1.style.color = getPrimaryColor();
+                v1 = App.session.dragVal !== null ? App.session.dragVal : App.session.targetVal;
+            } else if (App.state === GameState.P2_GUESS) {
+                p1.style.color = teamColor;
+                v1 = App.session.dragVal !== null ? App.session.dragVal : App.session.guessVal;
+            } else if (App.state === GameState.REVEAL) {
+                v1 = App.session.targetVal; 
+                v2 = App.session.guessVal;
+                p1.style.color = getPrimaryColor();
+                p2.style.color = teamColor;
+            }
+
+            if (v1 !== null && v1 !== undefined) {
+                p1.textContent = v1.toFixed(1);
+                if (v2 !== null && v2 !== undefined) {
+                    p2.textContent = v2.toFixed(1);
+                    p2.classList.remove('hidden'); sep.classList.remove('hidden');
+                } else {
+                    p2.classList.add('hidden'); sep.classList.add('hidden');
+                }
+                indicator.classList.remove('opacity-0', 'translate-y-[-10px]');
+            }
+        }
+
+        /* --- LEADERBOARD & UTILS --- */
+        let currentSortMode = 'accumulated'; 
+        function switchView(viewName) { Object.values(views).forEach(el => el && el.classList.add('hidden-view')); views[viewName].classList.remove('hidden-view'); }
+        function fullReset() { window.location.reload(); }
+        function toggleLeaderboardModal() { views.leaderboard.classList.toggle('hidden-view'); if(!views.leaderboard.classList.contains('hidden-view')) sortLeaderboard(currentSortMode); }
+        
+        function sortLeaderboard(criteria) {
+            currentSortMode = criteria;
+            const btnAcc = document.getElementById('sort-accumulated');
+            const btnRound = document.getElementById('sort-round');
+            const yLabel = document.getElementById('chart-y-label');
+            
+            const activeStyle = `background-color: var(--stats-btn-active-bg); color: var(--stats-btn-active-text);`;
+            const inactiveStyle = `background-color: var(--stats-btn-inactive-bg); color: var(--stats-btn-inactive-text);`;
+
+            if (criteria === 'accumulated') {
+                btnAcc.style.cssText = activeStyle;
+                btnRound.style.cssText = inactiveStyle;
+                yLabel.textContent = "TOTAL ACUMULADO";
+                App.teams.sort((a, b) => b.totalScore - a.totalScore);
+            } else {
+                btnRound.style.cssText = activeStyle;
+                btnAcc.style.cssText = inactiveStyle;
+                yLabel.textContent = "PUNTOS POR RONDA";
+                App.teams.sort((a, b) => b.totalScore - a.totalScore);
+            }
+            renderLeaderboardTable(); renderChart(criteria);
+        }
+
+        function renderLeaderboardTable() {
+            const tbody = document.getElementById('leaderboard-body'); tbody.innerHTML = '';
+            App.teams.forEach((team, index) => {
+                const tr = document.createElement('tr'); tr.className = "border-b border-[var(--table-border)] last:border-0";
+                let rank = `<span class="theme-text-muted font-mono text-xs">#${index+1}</span>`;
+                if(index===0) rank='🥇'; if(index===1) rank='🥈'; if(index===2) rank='🥉';
+                const roundsPlayed = team.scores.length;
+                let avgError = "0.0"; if(roundsPlayed > 0) avgError = (team.totalDiff / roundsPlayed).toFixed(2);
+                tr.innerHTML = `<td class="py-3 pl-1 w-8">${rank}</td><td class="py-3 font-bold text-sm truncate max-w-[100px]" style="color:${team.color}">${team.name}</td><td class="py-3 text-right theme-text-muted font-mono text-xs">${avgError}</td><td class="py-3 text-right font-mono font-bold text-base pr-1">${team.totalScore}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderChart(mode) {
+            const svg = document.getElementById('stats-chart'); const legendContainer = document.getElementById('chart-legend');
+            svg.innerHTML = ''; legendContainer.innerHTML = '';
+            const width = svg.clientWidth; const height = svg.clientHeight; const padding = 15;
+            let maxY = 100; 
+            if (mode === 'accumulated') {
+                let maxTotal = 0; App.teams.forEach(t => { if(t.scores.length > 0) maxTotal = Math.max(maxTotal, t.totalScore); });
+                maxY = Math.max(100, Math.ceil(maxTotal / 100) * 100); 
+            }
+            for(let i=0; i<=4; i++) {
+                const y = padding + (height - padding*2) * (i/4);
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", 0); line.setAttribute("y1", y); line.setAttribute("x2", width); line.setAttribute("y2", y);
+                line.setAttribute("stroke", App.config.theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'); svg.appendChild(line);
+                if(i % 2 === 0) {
+                   const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                   const valDisplay = Math.round(maxY - (i/4)*maxY);
+                   text.setAttribute("x", 2); text.setAttribute("y", y - 4); text.setAttribute("fill", "#888"); text.setAttribute("font-size", "9");
+                   text.textContent = valDisplay; svg.appendChild(text);
+                }
+            }
+            let maxTurns = 0; App.teams.forEach(t => maxTurns = Math.max(maxTurns, t.scores.length)); if(maxTurns < 2) maxTurns = 2;
+            App.teams.forEach((team) => {
+                if (team.scores.length === 0) return;
+                const badge = document.createElement('div');
+                badge.className = "flex items-center gap-1 border border-[var(--glass-border)] px-2 py-1 rounded-full";
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full" style="background-color:${team.color}"></div><span class="text-[10px] theme-text-muted font-bold uppercase">${team.name}</span>`;
+                legendContainer.appendChild(badge);
+                let points = ""; let runningTotal = 0;
+                team.scores.forEach((score, rIndex) => {
+                    runningTotal += score; const valToPlot = mode === 'accumulated' ? runningTotal : score;
+                    const x = padding + (rIndex / (maxTurns - 1 || 1)) * (width - padding*2);
+                    const normalized = valToPlot / maxY; const y = height - padding - (normalized * (height - padding*2));
+                    points += `${x},${y} `;
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", x); circle.setAttribute("cy", y); circle.setAttribute("r", "2.5"); circle.setAttribute("fill", team.color); svg.appendChild(circle);
+                });
+                const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+                polyline.setAttribute("points", points); polyline.setAttribute("fill", "none"); polyline.setAttribute("stroke", team.color); polyline.setAttribute("stroke-width", "2"); polyline.classList.add('graph-line'); svg.appendChild(polyline);
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
