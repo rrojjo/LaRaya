@@ -1,5 +1,4 @@
 # 〰️ LA RAYA
-Aplicación web de estimación numérica (0.0 - 10.0) para equipos. Single-file component con soporte táctil y estadísticas vectoriales.
 
 ![Version](https://img.shields.io/badge/version-2.24-blueviolet?style=flat-square)
 ![Tech](https://img.shields.io/badge/HTML5-JS-orange?style=flat-square)
