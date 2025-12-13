@@ -50,12 +50,17 @@ El proyecto busca la simplicidad y el rendimiento, evitando frameworks pesados d
 
 ## 🚀 Despliegue y Uso
 
-Al ser un archivo estático, no requiere instalación de dependencias npm ni procesos de compilación.
+Al ser un archivo estático, no requiere instalación de dependencias npm ni procesos de compilación. Puedes ejecutarlo de dos formas:
 
+### 🌐 Opción A: Online (Recomendado)
+Accede directamente a la última versión desplegada sin descargar nada:
+👉 **https://rrojjo.github.io/LaRaya/**
+
+### 📂 Opción B: Local (Offline)
 1.  Clonar el repositorio o descargar el archivo `index.html`.
 2.  Ejecutar en cualquier navegador web moderno (Chromium, Gecko, WebKit).
 
-> **Nota:** Se requiere conexión a internet para la carga inicial de la librería de estilos (Tailwind) y las tipografías.
+> **Nota:** Se requiere conexión a internet la primera vez (en ambas opciones) para cargar la librería de estilos (Tailwind) y las tipografías.
 
 ---
 
