@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>LA RAYA v2.24</title>
+    <title>LA RAYA v2.25</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -111,11 +111,8 @@
         .fade-enter { opacity: 0; transform: scale(0.98); }
         .fade-enter-active { opacity: 1; transform: scale(1); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         
-        path.graph-line {
-            stroke-dasharray: 2000;
-            stroke-dashoffset: 2000;
-            animation: dash 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        /* La animación de línea del gráfico se aplica dinámicamente con JS 
+           para calcular la longitud real del path */
         @keyframes dash { to { stroke-dashoffset: 0; } }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -144,36 +141,43 @@
         }
 
         /* Toggle Switch Styles */
-        .toggle-checkbox {
-            right: 4px;
-            z-index: 10;
-            border: none;
-            width: 1.25rem;
-            height: 1.25rem;
-            top: 2px;
-            background-color: var(--bg-color); 
-            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        
-        .toggle-checkbox:checked {
-            right: 0;
-            transform: translateX(100%);
-            border-color: transparent;
-        }
-        
-        .toggle-label {
+        .toggle-switch {
+            position: relative;
             width: 3rem;
-            height: 1.5rem;
+            height: 1.75rem;
+            cursor: pointer;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
             background-color: var(--toggle-bg);
             border-radius: 9999px;
-            position: relative;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease;
         }
-        
-        .toggle-container { position: relative; width: 3rem; height: 1.5rem; }
-        .toggle-checkbox:checked + .toggle-label { background-color: var(--text-color); }
-        .toggle-checkbox:checked { right: 2px; transform: translateX(0); left: auto; }
-        .toggle-checkbox { left: 2px; right: auto; }
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+            pointer-events: none;
+        }
+        .toggle-switch input:checked ~ .toggle-track {
+            background-color: var(--text-color);
+        }
+        .toggle-switch input:checked ~ .toggle-thumb {
+            transform: translateX(1.25rem);
+            background-color: var(--bg-color);
+        }
     </style>
 </head>
 <body id="main-body">
@@ -185,7 +189,7 @@
             
             <!-- CAMBIO 1: Versión v2.24 -->
             <div class="flex items-center gap-3 mt-1">
-                <span class="theme-text-muted text-xs tracking-[0.2em] uppercase font-bold">v2.24</span>
+                <span class="theme-text-muted text-xs tracking-[0.2em] uppercase font-bold">v2.25</span>
                 <div class="h-px bg-current opacity-20 flex-1 rounded-full"></div>
             </div>
         </div>
@@ -198,17 +202,17 @@
         </div>
 
         <!-- Toggle Tema Claro / Oscuro -->
-        <!-- DESACTIVADO HASTA ARREGLARLO <div class="theme-glass rounded-2xl p-4 mb-3 flex justify-between items-center">
+        <div class="theme-glass rounded-2xl p-4 mb-3 flex justify-between items-center">
             <div>
-                <span class="block text-sm font-medium">Modo Oscuro / Claro</span>
+                <span class="block text-sm font-medium">Modo Claro</span>
                 <span class="text-[10px] theme-text-muted uppercase tracking-wide">Apariencia</span>
             </div>
-            <div class="toggle-container">
-                <input type="checkbox" name="toggle" id="theme-toggle" class="absolute opacity-0 w-full h-full cursor-pointer z-20" onclick="toggleThemeConfig()"/>
-                <div class="toggle-label w-full h-full"></div>
-                <div class="toggle-checkbox absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-sm transition-transform duration-300 pointer-events-none flex items-center justify-center text-[8px]" id="toggle-dot" style="transform: translateX(0);"></div>
-            </div>
-        </div>-->
+            <label class="toggle-switch">
+                <input type="checkbox" id="theme-toggle" onchange="toggleThemeConfig()">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb" id="toggle-dot"></div>
+            </label>
+        </div>
 
         <div class="theme-glass rounded-2xl p-4 mb-6 flex justify-between items-center">
             <div>
@@ -240,7 +244,7 @@
     </section>
 
     <!-- SECCIÓN DE JUEGO -->
-    <section id="view-game" class="absolute inset-0 z-40 hidden-view flex flex-col overflow-hidden transition-colors duration-500">
+    <section id="view-game" class="absolute inset-0 z-40 hidden-view flex flex-col overflow-hidden transition-colors duration-500" style="background-color: var(--bg-color);">
         
         <!-- Header Juego -->
         <div class="safe-padding-top w-full px-6 pt-4 pb-2 flex justify-between items-start z-ui-top shrink-0 relative">
@@ -335,7 +339,7 @@
             <button onclick="toggleLeaderboardModal()" class="p-2 rounded-full opacity-50 active:scale-90 transition-transform"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         <div class="p-4 flex-1 overflow-hidden flex flex-col">
-            <div class="flex bg-current bg-opacity-5 p-1 rounded-xl mb-4 shrink-0">
+            <div class="flex p-1 rounded-xl mb-4 shrink-0" style="background-color: var(--input-bg);">
                 <button onclick="sortLeaderboard('accumulated')" id="sort-accumulated" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow">Acumulado</button>
                 <button onclick="sortLeaderboard('round')" id="sort-round" class="flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all">Por Ronda</button>
             </div>
@@ -413,21 +417,18 @@
         function toggleThemeConfig() {
             const checkbox = document.getElementById('theme-toggle');
             const body = document.getElementById('main-body');
-            const dot = document.getElementById('toggle-dot');
             
             if (checkbox.checked) {
                 App.config.theme = 'light';
                 body.setAttribute('data-theme', 'light');
-                dot.style.transform = 'translateX(1.5rem)';
             } else {
                 App.config.theme = 'dark';
                 body.removeAttribute('data-theme');
-                dot.style.transform = 'translateX(0)';
             }
         }
 
         function getPrimaryColor() {
-            return getComputedStyle(document.documentElement).getPropertyValue('--bar-primary').trim();
+            return getComputedStyle(document.body).getPropertyValue('--bar-primary').trim();
         }
 
         /* --- NOTAS LOGIC --- */
@@ -651,7 +652,9 @@
             }
             
             team.scores.push(score); team.diffs.push(diff);
-            team.totalScore += score; team.totalDiff += diff;
+            // Recalcular totales desde los arrays para evitar desincronización por punto flotante
+            team.totalScore = team.scores.reduce((a, b) => a + b, 0);
+            team.totalDiff = team.diffs.reduce((a, b) => a + b, 0);
 
             const scorePanel = document.getElementById('score-feedback');
             scorePanel.classList.remove('hidden');
@@ -809,6 +812,22 @@
         function fullReset() { window.location.reload(); }
         function toggleLeaderboardModal() { views.leaderboard.classList.toggle('hidden-view'); if(!views.leaderboard.classList.contains('hidden-view')) sortLeaderboard(currentSortMode); }
         
+        // Obtener equipos ordenados sin mutar el array original (protege currentTeamIndex)
+        function getSortedTeams(criteria) {
+            const sorted = [...App.teams];
+            if (criteria === 'accumulated') {
+                sorted.sort((a, b) => b.totalScore - a.totalScore);
+            } else {
+                // Ordenar por puntuación de la última ronda jugada
+                sorted.sort((a, b) => {
+                    const lastA = a.scores.length > 0 ? a.scores[a.scores.length - 1] : 0;
+                    const lastB = b.scores.length > 0 ? b.scores[b.scores.length - 1] : 0;
+                    return lastB - lastA;
+                });
+            }
+            return sorted;
+        }
+
         function sortLeaderboard(criteria) {
             currentSortMode = criteria;
             const btnAcc = document.getElementById('sort-accumulated');
@@ -822,25 +841,39 @@
                 btnAcc.style.cssText = activeStyle;
                 btnRound.style.cssText = inactiveStyle;
                 yLabel.textContent = "TOTAL ACUMULADO";
-                App.teams.sort((a, b) => b.totalScore - a.totalScore);
             } else {
                 btnRound.style.cssText = activeStyle;
                 btnAcc.style.cssText = inactiveStyle;
                 yLabel.textContent = "PUNTOS POR RONDA";
-                App.teams.sort((a, b) => b.totalScore - a.totalScore);
             }
-            renderLeaderboardTable(); renderChart(criteria);
+            renderLeaderboardTable(criteria); renderChart(criteria);
         }
 
-        function renderLeaderboardTable() {
+        function renderLeaderboardTable(criteria) {
             const tbody = document.getElementById('leaderboard-body'); tbody.innerHTML = '';
-            App.teams.forEach((team, index) => {
+            const sorted = getSortedTeams(criteria);
+            sorted.forEach((team, index) => {
                 const tr = document.createElement('tr'); tr.className = "border-b border-[var(--table-border)] last:border-0";
                 let rank = `<span class="theme-text-muted font-mono text-xs">#${index+1}</span>`;
                 if(index===0) rank='🥇'; if(index===1) rank='🥈'; if(index===2) rank='🥉';
                 const roundsPlayed = team.scores.length;
-                let avgError = "0.0"; if(roundsPlayed > 0) avgError = (team.totalDiff / roundsPlayed).toFixed(2);
-                tr.innerHTML = `<td class="py-3 pl-1 w-8">${rank}</td><td class="py-3 font-bold text-sm truncate max-w-[100px]" style="color:${team.color}">${team.name}</td><td class="py-3 text-right theme-text-muted font-mono text-xs">${avgError}</td><td class="py-3 text-right font-mono font-bold text-base pr-1">${team.totalScore}</td>`;
+                // Recalcular avgError desde el array para consistencia
+                let avgError = "0.00";
+                if(roundsPlayed > 0) {
+                    const sumDiff = team.diffs.reduce((a, b) => a + b, 0);
+                    avgError = (sumDiff / roundsPlayed).toFixed(2);
+                }
+                
+                // Mostrar valor según el modo de visualización
+                let displayScore;
+                if (criteria === 'round') {
+                    const lastScore = roundsPlayed > 0 ? team.scores[team.scores.length - 1] : 0;
+                    displayScore = lastScore;
+                } else {
+                    displayScore = team.scores.reduce((a, b) => a + b, 0);
+                }
+                
+                tr.innerHTML = `<td class="py-3 pl-1 w-8">${rank}</td><td class="py-3 font-bold text-sm truncate max-w-[100px]" style="color:${team.color}">${team.name}</td><td class="py-3 text-right theme-text-muted font-mono text-xs">${avgError}</td><td class="py-3 text-right font-mono font-bold text-base pr-1">${displayScore}</td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -851,8 +884,17 @@
             const width = svg.clientWidth; const height = svg.clientHeight; const padding = 15;
             let maxY = 100; 
             if (mode === 'accumulated') {
-                let maxTotal = 0; App.teams.forEach(t => { if(t.scores.length > 0) maxTotal = Math.max(maxTotal, t.totalScore); });
+                let maxTotal = 0;
+                App.teams.forEach(t => {
+                    if(t.scores.length > 0) {
+                        const total = t.scores.reduce((a, b) => a + b, 0);
+                        maxTotal = Math.max(maxTotal, total);
+                    }
+                });
                 maxY = Math.max(100, Math.ceil(maxTotal / 100) * 100); 
+            } else {
+                // En modo ronda, maxY es 100 (puntuación máxima por ronda)
+                maxY = 100;
             }
             for(let i=0; i<=4; i++) {
                 const y = padding + (height - padding*2) * (i/4);
@@ -873,17 +915,38 @@
                 badge.className = "flex items-center gap-1 border border-[var(--glass-border)] px-2 py-1 rounded-full";
                 badge.innerHTML = `<div class="w-2 h-2 rounded-full" style="background-color:${team.color}"></div><span class="text-[10px] theme-text-muted font-bold uppercase">${team.name}</span>`;
                 legendContainer.appendChild(badge);
-                let points = ""; let runningTotal = 0;
+                
+                const pointsArray = []; // Para calcular longitud del path
+                let runningTotal = 0;
                 team.scores.forEach((score, rIndex) => {
                     runningTotal += score; const valToPlot = mode === 'accumulated' ? runningTotal : score;
                     const x = padding + (rIndex / (maxTurns - 1 || 1)) * (width - padding*2);
                     const normalized = valToPlot / maxY; const y = height - padding - (normalized * (height - padding*2));
-                    points += `${x},${y} `;
+                    pointsArray.push({x, y});
                     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                     circle.setAttribute("cx", x); circle.setAttribute("cy", y); circle.setAttribute("r", "2.5"); circle.setAttribute("fill", team.color); svg.appendChild(circle);
                 });
+                
+                const pointsStr = pointsArray.map(p => `${p.x},${p.y}`).join(' ');
                 const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-                polyline.setAttribute("points", points); polyline.setAttribute("fill", "none"); polyline.setAttribute("stroke", team.color); polyline.setAttribute("stroke-width", "2"); polyline.classList.add('graph-line'); svg.appendChild(polyline);
+                polyline.setAttribute("points", pointsStr); 
+                polyline.setAttribute("fill", "none"); 
+                polyline.setAttribute("stroke", team.color); 
+                polyline.setAttribute("stroke-width", "2");
+                svg.appendChild(polyline);
+                
+                // Calcular la longitud real del path para la animación
+                let pathLength = 0;
+                for (let i = 1; i < pointsArray.length; i++) {
+                    const dx = pointsArray[i].x - pointsArray[i-1].x;
+                    const dy = pointsArray[i].y - pointsArray[i-1].y;
+                    pathLength += Math.sqrt(dx * dx + dy * dy);
+                }
+                // Aplicar animación con longitud correcta
+                const len = Math.ceil(pathLength) + 10; // margen de seguridad
+                polyline.style.strokeDasharray = len;
+                polyline.style.strokeDashoffset = len;
+                polyline.style.animation = `dash 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards`;
             });
         }
 
