@@ -10,7 +10,7 @@
 
 ---
 
-## 📋 Descripción del Proyecto
+## Descripción del Proyecto
 
 **LA RAYA** es una *Single Page Application* (SPA) ligera diseñada para gestionar partidas locales de 2 a 10 jugadores organizados en equipos. La aplicación digitaliza la mecánica de juegos de mesa basados en diales o escalas continuas, permitiendo una precisión decimal (0.0 a 10.0) y ofreciendo herramientas de gestión de partida automatizadas.
 
@@ -27,7 +27,7 @@ El núcleo del juego se basa en la discrepancia de percepción entre dos jugador
 
 ---
 
-## ⚙️ Funcionalidades Técnicas
+## Funcionalidades Técnicas
 
 * **Gestión de Estado Local:** Control de turnos, rotación de equipos y puntuaciones almacenadas en variables de sesión. Soporte para hasta 5 equipos simultáneos.
 * **Renderizado en Canvas:** La barra de juego y los indicadores visuales se renderizan dinámicamente utilizando la API Canvas de HTML5 para un movimiento fluido a 60fps.
@@ -37,7 +37,7 @@ El núcleo del juego se basa en la discrepancia de percepción entre dos jugador
 
 ---
 
-## 🛠 Stack Tecnológico
+## Stack Tecnológico
 
 El proyecto busca la simplicidad y el rendimiento, evitando frameworks pesados de JavaScript.
 
@@ -48,15 +48,15 @@ El proyecto busca la simplicidad y el rendimiento, evitando frameworks pesados d
 
 ---
 
-## 🚀 Despliegue y Uso
+## Despliegue y Uso
 
 Al ser un archivo estático, no requiere instalación de dependencias npm ni procesos de compilación. Puedes ejecutarlo de dos formas:
 
-### 🌐 Opción A: Online (Recomendado)
+### Opción A: Online (Recomendado)
 Accede directamente a la última versión desplegada sin descargar nada:
-👉 **https://rrojjo.github.io/LaRaya/**
+**https://rrojjo.github.io/LaRaya/**
 
-### 📂 Opción B: Local (Offline)
+### Opción B: Local (Offline)
 1.  Clonar el repositorio o descargar el archivo `index.html`.
 2.  Ejecutar en cualquier navegador web moderno (Chromium, Gecko, WebKit).
 
@@ -64,6 +64,6 @@ Accede directamente a la última versión desplegada sin descargar nada:
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto se distribuye bajo la licencia **MIT**. Consulte el archivo `LICENSE` para más detalles.
