@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![AI](https://img.shields.io/badge/AI_Assistance-Google_Gemini-8E75B2?style=flat-square)
 
-> Aplicación web de estimación y precisión para multijugador local basada en escalas subjetivas.
+> Juego web de estimación y precisión para multijugador local basada en escalas subjetivas.
 
 ---
 
